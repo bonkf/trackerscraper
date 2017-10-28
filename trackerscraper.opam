@@ -1,0 +1,19 @@
+opam-version: "1.2"
+version: "0.3"
+maintainer: "fabian.bonk@bonkii.com"
+authors: ["Fabian Bonk"]
+homepage: "https://github.com/Reperator/trackerscraper"
+bug-reports: "https://github.com/Reperator/trackerscraper/issues"
+dev-repo: "git://github.com/Reperator/trackerscraper.git"
+license: "LGPL"
+build: [
+  ["jbuilder" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "core"
+  "yojson"
+  "lwt"
+  "ocaml-migrate-parsetree"
+  "jbuilder" {build & >= "1.0+beta14"}
+]
+available: [ocaml-version >= "4.04.0"]

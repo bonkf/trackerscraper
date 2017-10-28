@@ -1,0 +1,10 @@
+(jbuild_version 1)
+
+(executable
+ ((name trackerscraper)
+  (public_name trackerscraper)
+  (modes (native))
+  (libraries (core yojson lwt lwt.unix))
+  (preprocess (pps (lwt.ppx)))))
+
+(ocamllex (magnet_lex))
