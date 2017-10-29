@@ -123,8 +123,8 @@ peers:
 
 [2017-10-29 02:20:16.706529+02:00] sent connect (16 bytes, tid: beefcace) to 1.2.3.4:1337
 [2017-10-29 02:20:16.733152+02:00] received connect (16 bytes, connection_id: beefdeadbeefdead) from 1.2.3.4:1337
-[2017-10-29 02:20:16.733209+02:00] sent announce started (98 bytes, cid: beefdeadbeefdead, tid: a7d135bb, num_want 10) to 1.2.3.4:1337
-[2017-10-29 02:20:16.758171+02:00] received announce response (80 bytes, cid: beefdeadbeefdead, 12 leechers, 809 seeders, 10 peers) from 1.2.3.4:1337
+[2017-10-29 02:20:16.733209+02:00] sent announce started (98 bytes, cid: beefdeadbeefdead, tid: bedeadef, num_want 3) to 1.2.3.4:1337
+[2017-10-29 02:20:16.758171+02:00] received announce response (80 bytes, cid: beefdeadbeefdead, 12 leechers, 809 seeders, 3 peers) from 1.2.3.4:1337
 [2017-10-29 02:20:16.758190+02:00] attempting to fetch 821 peers from 1.2.3.4:1337
 [2017-10-29 02:20:16.758215+02:00] sent announce stopped (98 bytes, tid feedface) to 1.2.3.4:1337
 ```
