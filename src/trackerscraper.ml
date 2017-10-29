@@ -3,7 +3,7 @@ open Lwt
 open Printf
 open Command
 
-let trackerscraper_version = "0.3"
+let trackerscraper_version = "0.3.0"
 
 let run magnet log out pretty num_want rescrape seq timeout =
   let log =
