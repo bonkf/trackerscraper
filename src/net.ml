@@ -283,8 +283,7 @@ let close ~log ({ hash; socket; cid; local_port; peer_id; address } as c) =
   | `Inactive ->
     log @@ sprintf "connection already inactive (%s)" address;
     c.cid <- `Closed;
-    close socket >>= fun () ->
-    return_unit
+    close socket
   | `Active cid ->
     let tid = Util.random_string 4 in
     let msg = prepare_announce cid tid hash peer_id local_port 0 `Stopped in
@@ -294,5 +293,4 @@ let close ~log ({ hash; socket; cid; local_port; peer_id; address } as c) =
       (Util.to_hex tid)
       address;
     c.cid <- `Closed;
-    close socket >>= fun () ->
-    return_unit
+    close socket
