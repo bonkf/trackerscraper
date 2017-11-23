@@ -4,6 +4,9 @@ let () = Random.self_init ()
 
 type log = string -> unit
 
+let ci = Char.to_int
+let ic = Char.of_int_exn
+
 let offset c =
   match c with
   | '0' .. '9' -> 48
@@ -16,11 +19,11 @@ let from_hex str =
     if String.length str mod 2 <> 0 then "0" ^ str else str in
 
   let hex_to_int c =
-    Char.to_int c - offset c in
+    ci c - offset c in
 
   String.init
     (String.length str / 2)
-    ~f:(fun i -> Char.of_int_exn ((hex_to_int str.[2 * i] lsl 4) + (hex_to_int str.[(2 * i) + 1])))
+    ~f:(fun i -> ic ((hex_to_int str.[2 * i] lsl 4) + (hex_to_int str.[(2 * i) + 1])))
 
 let to_hex ?(upper = false) str =
   let f i =
@@ -31,7 +34,7 @@ let to_hex ?(upper = false) str =
       | n when n >= 0x0 && n < 0xa -> 48
       | n when n >= 0xa && n <= 0xf -> if upper then 55 else 87
       | _ -> raise @@ Invalid_argument "invalid nibble" (* this should never happen *) in
-    Char.of_int_exn (nibble + offset) in
+    ic (nibble + offset) in
 
   String.init (String.length str * 2) ~f
 
@@ -55,18 +58,21 @@ let unescape str =
   let out = Buffer.create len in (* out is <= str, so we won't have to reallocate *)
   let rec loop in_index =
     if in_index < len then
-      if str.[in_index] = '%' then
-        let first = str.[in_index + 1] in
-        let second = str.[in_index + 2] in
-        begin try
-          ((Char.to_int first - offset first) lsl 4) + (Char.to_int second - offset second)
-        with
-        | Invalid_argument _ (* index out of bounds *) ->
-          raise @@ Invalid_argument "% too close to end of string"
-        end
-        |> Char.of_int_exn
-        |> Buffer.add_char out
-      else
-        Buffer.add_char out str.[in_index] in
+      if str.[in_index] = '%' then begin
+        let new_char =
+          try
+            let first = str.[in_index + 1] in
+            let second = str.[in_index + 2] in
+            ((ci first - offset first) lsl 4) + (ci second - offset second)
+          with
+          | Invalid_argument _ (* index out of bounds *) ->
+            raise @@ Invalid_argument "% too close to end of string" in
+        ic new_char
+        |> Buffer.add_char out;
+        loop (in_index + 3)
+      end else begin
+        Buffer.add_char out str.[in_index];
+        loop (in_index + 1)
+      end in
   loop 0;
   Buffer.to_bytes out
