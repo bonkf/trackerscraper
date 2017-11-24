@@ -10,18 +10,29 @@ let run magnet log out pretty num_want rescrape seq timeout =
     match log with
     | None -> ignore
     | Some file ->
-      let oc =
-        if file = "--" then Out_channel.stdout else Out_channel.create file in
-      fun str ->
+      let log_fun oc str =
         fprintf oc "[%s] %s\n" Time.(to_string (now ())) str;
         Out_channel.flush oc in
+      let oc =
+        if file = "--" then
+          Out_channel.stdout
+        else
+          try Out_channel.create file with
+          | Sys_error _ (* permisson denied or invalid path *) ->
+            log_fun Out_channel.stdout (sprintf "could not open log file %s, falling back to stdout\n" file);
+            Out_channel.stdout in
+      log_fun oc in
 
   let oc =
     match out with
     | None | Some "--" -> Out_channel.stdout
-    | Some file -> Out_channel.create file in
+    | Some file ->
+      try Out_channel.create file with
+      | Sys_error _ (* permisson denied or invalid path *) ->
+        log (sprintf "could not open output file %s, falling back to stdout\n" file);
+        Out_channel.stdout in
 
-  let to_channel =
+  let output_json =
     if pretty then
       Yojson.Safe.pretty_to_channel oc
     else
@@ -67,12 +78,12 @@ let run magnet log out pretty num_want rescrape seq timeout =
       Lwt_list.(if seq then map_s else map_p) scrape_tracker udp_trackers in
     let json =
       Json.to_json @@ Ok Json.{ info_hash; name; peers; udp_trackers = scrape_results } in
-    to_channel json;
+    output_json json;
     return_unit
   with
   | exn ->
     let json = Json.to_json @@ Error exn in
-    to_channel json;
+    output_json json;
     return_unit
 
 let command =
