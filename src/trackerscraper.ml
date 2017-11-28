@@ -1,6 +1,7 @@
 open Core
 open Lwt
 open Printf
+open Out_channel
 open Command
 
 let trackerscraper_version = "0.3.1"
@@ -12,25 +13,24 @@ let run magnet log out pretty num_want rescrape seq timeout =
     | Some file ->
       let log_fun oc str =
         fprintf oc "[%s] %s\n" Time.(to_string (now ())) str;
-        Out_channel.flush oc in
+        flush oc in
       let oc =
-        if file = "--" then
-          Out_channel.stdout
+        if file = "--" then stdout
         else
-          try Out_channel.create file with
+          try create file with
           | Sys_error _ (* permisson denied or invalid path *) ->
-            log_fun Out_channel.stdout (sprintf "could not create log file %s, falling back to stdout\n" file);
-            Out_channel.stdout in
+            log_fun stdout (sprintf "could not create log file %s, falling back to stdout\n" file);
+            stdout in
       log_fun oc in
 
   let oc =
     match out with
-    | None | Some "--" -> Out_channel.stdout
+    | None | Some "--" -> stdout
     | Some file ->
-      try Out_channel.create file with
+      try create file with
       | Sys_error _ (* permisson denied or invalid path *) ->
         log (sprintf "could not create output file %s, falling back to stdout\n" file);
-        Out_channel.stdout in
+        stdout in
 
   let output_json =
     if pretty then
