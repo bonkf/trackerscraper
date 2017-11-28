@@ -27,19 +27,17 @@ let from_hex str =
 
 let to_hex ?(upper = false) str =
   let f i =
-    let c = Char.to_int str.[i / 2] in
+    let c = ci str.[i / 2] in
     let nibble = if i mod 2 = 0 then c lsr 4 else c land 0xf in
     let offset =
-      match nibble with
-      | n when n >= 0x0 && n < 0xa -> 48
-      | n when n >= 0xa && n <= 0xf -> if upper then 55 else 87
-      | _ -> raise @@ Invalid_argument "invalid nibble" (* this should never happen *) in
+      if nibble < 0xa then 48 (* 0x0 <= nibble <= 0xf *)
+      else if upper then 55 else 87 in
     ic (nibble + offset) in
 
   String.init (String.length str * 2) ~f
 
 let random_string len =
-  String.init len ~f:(fun _ -> Random.int 256 |> Char.of_int_exn)
+  String.init len ~f:(fun _ -> Random.int 256 |> ic)
 
 let peer_id () = (* faking a Transmission 2.92 peer id *)
   let pool = "0123456789abcdefghijklmnopqrstuvwxyz" in
@@ -47,11 +45,10 @@ let peer_id () = (* faking a Transmission 2.92 peer id *)
   "-TR2920-" ^ (String.init 12 ~f:(fun _ -> pool.[Random.int pool_len]))
 
 let int_of_4bytes str ~pos =
-  let i = Char.to_int in
-  (i str.[pos] lsl 24)
-  + (i str.[pos + 1] lsl 16)
-  + (i str.[pos + 2] lsl 8)
-  + (i str.[pos + 3])
+  (ci str.[pos] lsl 24)
+  + (ci str.[pos + 1] lsl 16)
+  + (ci str.[pos + 2] lsl 8)
+  + (ci str.[pos + 3])
 
 let unescape str =
   let len = String.length str in
@@ -76,3 +73,4 @@ let unescape str =
       end in
   loop 0;
   Buffer.to_bytes out
+ 
