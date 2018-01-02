@@ -93,9 +93,11 @@ let handle_tracker_error response len tid =
 
 let prepare_connect tid =
   (* magic number, action = connect, random transaction_id*)
-  "\x00\x00\x04\x17\x27\x10\x19\x80\x00\x00\x00\x00" ^ tid
+  ("\x00\x00\x04\x17\x27\x10\x19\x80\x00\x00\x00\x00" ^ tid)
+  |> Bytes.unsafe_of_string_promise_no_mutation (* only passed to write syscall *)
 
 let verify_connect response len tid =
+  let response = Bytes.unsafe_to_string response in
   if len < 16 then
     fail @@ Invalid_response (response, `Too_short)
   else if String.sub response ~pos:0 ~len:4 <> "\x00\x00\x00\x00" then
@@ -118,15 +120,15 @@ let connect ~log ~hash ~addr ~port =
 
     let tid = Util.random_string 4 in
     let msg = prepare_connect tid in
-    let%lwt send_len = write socket msg 0 (String.length msg) in
+    let%lwt send_len = write socket msg 0 (Bytes.length msg) in
     log @@ sprintf "sent connect (%d bytes, tid: %s) to %s"
       send_len
       (Util.to_hex tid)
       readable_address;
 
-    let recv_buf = String.create 10_000 in
+    let recv_buf = Bytes.create 10_000 in
     let%lwt recv_len =
-      with_timeout !timeout (fun () -> read socket recv_buf 0 (String.length recv_buf)) in
+      with_timeout !timeout (fun () -> read socket recv_buf 0 (Bytes.length recv_buf)) in
     let%lwt cid = verify_connect recv_buf recv_len tid in
     log @@ sprintf "received connect (%d bytes, connection_id: %s) from %s"
       recv_len
@@ -153,15 +155,15 @@ let reconnect ~log ({ socket; address; _ } as connection) =
   try%lwt
     let tid = Util.random_string 4 in
     let msg = prepare_connect tid in
-    let%lwt send_len = write socket msg 0 (String.length msg) in
+    let%lwt send_len = write socket msg 0 (Bytes.length msg) in
     log @@ sprintf "sent reconnect (%d bytes, tid: %s) to %s"
       send_len
       (Util.to_hex tid)
       address;
 
-    let recv_buf = String.create 10_000 in
+    let recv_buf = Bytes.create 10_000 in
     let%lwt recv_len =
-      with_timeout !timeout (fun () -> read socket recv_buf 0 (String.length recv_buf)) in
+      with_timeout !timeout (fun () -> read socket recv_buf 0 (Bytes.length recv_buf)) in
     let%lwt cid = verify_connect recv_buf recv_len tid in
     log @@ sprintf "received reconnect (%d bytes, connection_id: %s) from %s"
       recv_len
@@ -209,8 +211,10 @@ let prepare_announce cid tid info_hash peer_id local_port num_want event =
     (num_want land 0xff |> Char.of_int_exn)
     ((local_port lsr 8) land 0xff |> Char.of_int_exn) (* upper and lower byte of the port *)
     (local_port land 0xff |> Char.of_int_exn)
+  |> Bytes.unsafe_of_string_promise_no_mutation (* only passed to write syscall *)
 
 let verify_announce response len tid =
+  let response = Bytes.unsafe_to_string response in
   if len < 20 then
     fail @@ Invalid_response (response, `Too_short)
   else if String.sub response ~pos:0 ~len:4 <> "\x00\x00\x00\x01" then
@@ -247,7 +251,7 @@ let rec announce ~log ({ hash; socket; cid; local_port; peer_id; address } as c)
     try%lwt
       let tid = Util.random_string 4 in
       let msg = prepare_announce cid tid hash peer_id local_port num_want event in
-      let%lwt send_len = write socket msg 0 (String.length msg) in
+      let%lwt send_len = write socket msg 0 (Bytes.length msg) in
       log @@ sprintf "sent announce %s (%d bytes, cid: %s, tid: %s, num_want %d) to %s"
         (match event with `Started -> "started" | `None -> "none")
         send_len
@@ -256,9 +260,9 @@ let rec announce ~log ({ hash; socket; cid; local_port; peer_id; address } as c)
         num_want
         address;
 
-      let recv_buf = String.create 10_000 in
+      let recv_buf = Bytes.create 10_000 in
       let%lwt recv_len =
-        with_timeout !timeout (fun () -> read socket recv_buf 0 (String.length recv_buf)) in
+        with_timeout !timeout (fun () -> read socket recv_buf 0 (Bytes.length recv_buf)) in
       let%lwt { leechers; seeders; peers } as result = verify_announce recv_buf recv_len tid in
       log @@ sprintf
         "received announce response (%d bytes, cid: %s, %d leechers, %d seeders, %d peers) from %s"
@@ -287,7 +291,7 @@ let close ~log ({ hash; socket; cid; local_port; peer_id; address } as c) =
   | `Active cid ->
     let tid = Util.random_string 4 in
     let msg = prepare_announce cid tid hash peer_id local_port 0 `Stopped in
-    let%lwt send_len = write socket msg 0 (String.length msg) in
+    let%lwt send_len = write socket msg 0 (Bytes.length msg) in
     log @@ sprintf "sent announce stopped (%d bytes, tid %s) to %s"
       send_len
       (Util.to_hex tid)

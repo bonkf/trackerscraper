@@ -72,5 +72,4 @@ let unescape str =
         loop (in_index + 1)
       end in
   loop 0;
-  Buffer.to_bytes out
- 
+  Bytes.unsafe_to_string (Buffer.to_bytes out) (* obviously safe, no need to copy *)

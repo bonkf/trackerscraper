@@ -6,6 +6,8 @@ open Command
 
 let trackerscraper_version = "0.3.1"
 
+let summary = "query trackers for provided magnet link"
+
 let run magnet log out pretty num_want rescrape seq timeout =
   let log =
     match log with
@@ -87,7 +89,7 @@ let run magnet log out pretty num_want rescrape seq timeout =
     return_unit
 
 let command =
-  basic ~summary:"query trackers for provided magnet link"
+  basic_spec ~summary ?readme:None
     Spec.(
       empty
       +> anon ("magnet-link" %: string)
