@@ -144,7 +144,7 @@ peers:
 ### Language
 
 `trackerscraper` is written in OCaml.
-I make use of some syntactic sugar added in OCaml 4.04.0; therefore this is the lowest supported OCaml version.
+`trackerscraper` requires OCaml 4.05.0 or newer.
 `trackerscraper` is built using [Jbuilder](https://github.com/janestreet/jbuilder).
 
 ### Dependencies
