@@ -4,7 +4,7 @@ open Printf
 open Out_channel
 open Command
 
-let trackerscraper_version = "0.3.1"
+let trackerscraper_version = "0.3.2"
 
 let summary = "query trackers for provided magnet link"
 
